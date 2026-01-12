@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router,Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home.jsx";
-import Signup from "./pages/SignUp/SignUp.jsx";
+import SignUp from "./pages/SignUp/SignUp.jsx";
 import Login from "./pages/Login/Login.jsx";
 
 
@@ -10,7 +10,7 @@ const routes=(
   <Routes>
   <Route path="/dashboard" exact element={<Home />} />
   <Route path="/login" exact element={<Login />} />
-  <Route path="/signup" exact element={<Signup />} />
+  <Route path="/signup" exact element={<SignUp />} />
   </Routes>
   </Router>
 )
