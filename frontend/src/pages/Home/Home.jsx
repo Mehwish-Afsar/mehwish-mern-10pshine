@@ -1,88 +1,178 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar/Navbar.jsx";
 import NoteCard from "../../components/Cards/NoteCard.jsx";
-import { Plus } from "lucide-react";
+import { Edit, Plus } from "lucide-react";
 import AddEditNotes from "./AddEditNotes.jsx";
 import Modal from "react-modal"
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInstance";
+import Message from "../../components/Message/Message.jsx";
+import AddNotesImg from "../../assets/Images/add-notes.svg"
+import NoDataImg from "../../assets/Images/no-notes.png"
+import EmptyCard from "../../components/EmptyCard/EmptyCard.jsx";
+
 
 
 const Home=()=>{
-    const [openAddEditModal,setOpenEditModal]=useState({
+    const [openAddEditModal,setOpenAddEditModal]=useState({
         isShown: false,
         type: "add",
-        date: null
+        data: null
     })
+
+    const [showMsg, setShowMsg]=useState({
+        isShown: false,
+        type: "add",
+        message: ""
+    })
+
+    const [userInfo, setUserInfo]=useState(null);
+    const [allNotes,setAllNotes]=useState([])
+    const [isSearch, setIsSearch]=useState(false)
+
+    const navigate=useNavigate()
+
+    const handleEdit=(noteDetails)=>{
+        setOpenAddEditModal({isShown: true, data: noteDetails, type: "edit" })
+    }
+
+    const handleCloseMsg=() =>{
+        setShowMsg({
+            isShown: false,
+            message:""
+        })
+    }
+
+    const showMessage=(message,type) =>{
+        setShowMsg({
+            isShown: true,
+            message: message,
+            type: type
+        })
+    }
+
+    // Get User Info
+    const getUserInfo=async ()=>{
+        try{
+            const response=await axiosInstance.get("/get-user")
+            if(response.data && response.data.user){
+                setUserInfo(response.data.user)
+            }
+        }catch(error){
+            if(error.response.status(401)){
+                localStorage.clear();
+                navigate("/login")
+            }
+        }
+    }
+
+    // Get All Notes
+    const getAllNotes=async()=>{
+        try{
+            const response=await axiosInstance.get("/get-all-notes")
+
+            if(response.data && response.data.notes){
+                setAllNotes(response.data.notes)
+            }
+        }catch(error){
+            console.log("An unexpected errror occured. Please try again.")
+        }
+    }
+
+    // Delete Note
+    const deleteNote=async(data)=>{
+            const noteId= data._id
+
+        try{
+            const response=await axiosInstance.delete("/delete-note/"+noteId)
+
+        if (response.data && !response.data.error){
+            showMessage("Note Deleted Successfully","delete")
+            getAllNotes();
+        }}
+        catch(error){
+        if(error.response && error.response.data && error.response.data.message){
+            console.log("An unexpected errror occured. Please try again.")
+
+        }}
+    }
+
+   const updateIsPinned=async(noteData)=>{
+        const noteId= noteData._id
+        try{
+            const response=await axiosInstance.put("/update-note-pinned/"+noteId,{
+            isPinned: !noteData.isPinned
+        })
+        
+        if (response.data && response.data.note){
+            showMessage("Note Pinned Successfully")
+            getAllNotes();
+            onClose()
+        }
+    }catch(error){
+        console.log(error)
+    }}
+
+    // Search Notes
+    const onSearchNote = async (query) => {
+        if (!query) {
+            setIsSearch(false);
+            getAllNotes();
+            return;
+        }
+
+        try {
+            const response = await axiosInstance.get("/search-notes", {
+            params: { query },
+        });
+
+     if (response.data && response.data.notes) {
+        setIsSearch(true);
+        setAllNotes(response.data.notes);
+    }
+    } catch (error) {
+    console.log(error);
+    }
+    };
+
+    const handleClearSearch = () => {
+        setIsSearch(false);
+        getAllNotes();
+    };
+
+    useEffect(()=>{
+        getAllNotes();
+        getUserInfo();
+
+        return()=>{}
+
+    }, [])
     
+
     return (
         <>
-        <Navbar />
+        <Navbar userInfo={userInfo} onSearchNote={onSearchNote} handleClearSearch={handleClearSearch}/>
         <div className="container mx-auto">
-            <div className="grid grid-cols-3 gap-4 mt-8">
-                <NoteCard 
-                title="Meeting on 7th April"
-                date="3rd April 2024"
-                content="Discuss project timeline and deliverables."
-                tags="#meeting #project"
-                isPlanned={true}
-                onEdit={()=>{}}
-                onDelete={()=>{}}
-                onPinNote={()=>{}}
-                />
-                <NoteCard 
-                title="Meeting on 7th April"
-                date="3rd April 2024"
-                content="Discuss project timeline and deliverables."
-                tags="#meeting #project"
-                isPlanned={true}
-                onEdit={()=>{}}
-                onDelete={()=>{}}
-                onPinNote={()=>{}}
-                />
-                <NoteCard 
-                title="Meeting on 7th April"
-                date="3rd April 2024"
-                content="Discuss project timeline and deliverables."
-                tags="#meeting #project"
-                isPlanned={true}
-                onEdit={()=>{}}
-                onDelete={()=>{}}
-                onPinNote={()=>{}}
-                />
-                <NoteCard 
-                title="Meeting on 7th April"
-                date="3rd April 2024"
-                content="Discuss project timeline and deliverables."
-                tags="#meeting #project"
-                isPlanned={true}
-                onEdit={()=>{}}
-                onDelete={()=>{}}
-                onPinNote={()=>{}}
-                />
-                <NoteCard 
-                title="Meeting on 7th April"
-                date="3rd April 2024"
-                content="Discuss project timeline and deliverables."
-                tags="#meeting #project"
-                isPlanned={true}
-                onEdit={()=>{}}
-                onDelete={()=>{}}
-                onPinNote={()=>{}}
-                />
-                <NoteCard 
-                title="Meeting on 7th April"
-                date="3rd April 2024"
-                content="Discuss project timeline and deliverables."
-                tags="#meeting #project"
-                isPlanned={true}
-                onEdit={()=>{}}
-                onDelete={()=>{}}
-                onPinNote={()=>{}}
-                />
-            </div>
+            {allNotes.length>0? (<div className="grid grid-cols-3 gap-4 mt-8">
+                {allNotes.map((item,index)=>(
+                    <NoteCard 
+                        key={item._id}
+                        title={item.title}
+                        date={item.createdOn}
+                        content={item.content}
+                        tags={item.tags}
+                        isPlanned={item.isPinned}
+                        onEdit={()=>{handleEdit(item)}}
+                        onDelete={()=>{deleteNote(item)}}
+                        onPinNote={()=>{updateIsPinned(item)}}
+                    />
+                ))}
+            </div>) : (<EmptyCard imgSrc={isSearch ? NoDataImg : AddNotesImg} 
+            message={isSearch ? "Oops! No notes found matching your Search": `Your notes start here. Click the 'Add' button to write down your thoughts, ideas, and reminders, and begin your journey.`}/> )}
         </div>
         <button className="h-16 w-16 flex items-center justify-center rounded-2xl bg-blue-500 text-white p-2 rounded my-1 hover:bg-blue-600 absolute right-10 bottom-10" 
         onClick={()=>{
-            setOpenEditModal({isShown:true,type: "add",date:null})
+            setOpenAddEditModal({isShown:true, type: "add", data:null})
         }}>
             <Plus className="text-[32px] text-white" />
         </button>
@@ -100,13 +190,23 @@ const Home=()=>{
         >
         <AddEditNotes 
         type={openAddEditModal.type}
-        date={openAddEditModal.date}
+        noteData={openAddEditModal.data}
         onClose={()=>{
-            setOpenEditModal({isShown:false,type:"add",date:null})
+            setOpenAddEditModal({isShown:false,type:"add",data:null})
         }}
+        getAllNotes={getAllNotes}
+        showMessage={showMessage}
         />
 
         </ Modal>
+
+        <Message 
+        isShown={showMsg.isShown}
+        type={showMsg.type}
+        message={showMsg.message}
+        onClose={handleCloseMsg}
+         
+        />
         </>
     )
 }

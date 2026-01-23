@@ -1,18 +1,59 @@
 import React, { useState } from "react";
 import TagInput from "../../components/Input/TagInput";
 import { X } from "lucide-react";
+import axiosInstance from "../../utils/axiosInstance";
 
-const AddEditNotes = ({noteData,type,onClose}) => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [tags, setTags] = useState([]);
+
+const AddEditNotes = ({noteData,type,getAllNotes,onClose, showMessage}) => {
+  const [title, setTitle] = useState(noteData?.title || "");
+  const [content, setContent] = useState(noteData?.content || "");
+  const [tags, setTags] = useState(noteData?.tags || []);
   const [error,setError]=useState(null);
 
   // Add Note
-  const addNewNote=async()=>{}
+  const addNewNote=async()=>{
+    try{
+      const response=await axiosInstance.post("/add-notes",{
+        title,
+        content,
+        tags,
+      })
+
+      if (response.data && response.data.note){
+        showMessage("Note Added Successfully")
+        getAllNotes();
+        onClose()
+      }
+    }
+    catch(error){
+      if(error.response && error.response.data && error.response.data.message){
+        setError(error.response.data.message)
+      }
+    }
+  }
 
   // Edit Note
-  const editNote=async ()=>{}
+  const editNote=async ()=>{
+    const noteId= noteData._id
+    try{
+      const response=await axiosInstance.put("/edit-notes/"+noteId,{
+        title,
+        content,
+        tags,
+      })
+
+      if (response.data && response.data.note){
+        showMessage("Note Updated Successfully")
+        getAllNotes();
+        onClose()
+      }
+    }
+    catch(error){
+      if(error.response && error.response.data && error.response.data.message){
+        setError(error.response.data.message)
+      }
+    }
+  }
 
   const handleAddNote=()=>{
     if(!title){
@@ -27,7 +68,7 @@ const AddEditNotes = ({noteData,type,onClose}) => {
     setError("")
 
     if (type ==="edit"){
-      EditNote();
+      editNote();
     }else{
       addNewNote();
     }
@@ -71,7 +112,7 @@ const AddEditNotes = ({noteData,type,onClose}) => {
       <button className="w-full text-sm bg-blue-600 text-white rounded cursor-pointer font-medium mt-5 p-2 hover:bg-blue-700"
       onClick={handleAddNote}
       >
-        ADD
+        {type === "edit"?"UPDATE" :"ADD"}
       </button>
     </div>
   );
