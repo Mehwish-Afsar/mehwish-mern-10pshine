@@ -179,6 +179,34 @@ app.put("/update-note-pinned/:noteId", authenticateToken, asyncHandler(async (re
   res.json({ error: false, note, message: "Note Updated Successfully" });
 }));
 
+app.get("/search-notes/", authenticateToken, asyncHandler(async (req, res) => {
+  const {user}=req.user;
+  const {query}=req.query;
+
+  if (!query){
+    return res.status(400).json({error:true, message: "Search query is required"})
+  }
+  try{
+    const matchingNotes=await Note.find({
+      userId: user._id,
+      $or: [
+        {title: {$regex: new RegExp(query,"i")}},
+        {content: {$regex: new RegExp(query,"i")}}
+
+      ]
+    })
+    return res.json({
+      error:false, 
+      notes: matchingNotes,
+      message: "Notes matching the search query retrieved successfully"
+    })
+
+
+  }catch(error){
+    return res.status(400).json({error:true, message: "Internal server error"})
+  }
+}));
+
 // Get User
 app.get("/get-user", authenticateToken, asyncHandler(async (req, res) => {
   const { user } = req.user;
