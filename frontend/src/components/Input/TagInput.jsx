@@ -1,16 +1,11 @@
 import React, { useState } from "react";
 import { Plus, X } from "lucide-react";
 
-const TagInput = () => {
+const TagInput = ({ tags, setTags }) => {
   const [inputValue, setInputValue] = useState("");
-  const [tags, setTags] = useState([]);
-
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
-  };
 
   const addNewTag = () => {
-    if (inputValue.trim() !== "") {
+    if (inputValue.trim() !== "" && !tags.includes(inputValue.trim())) {
       setTags([...tags, inputValue.trim()]);
       setInputValue("");
     }
@@ -30,12 +25,9 @@ const TagInput = () => {
   return (
     <div>
       {tags.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap mt-2">
+        <div className="flex flex-wrap gap-2 mt-2">
           {tags.map((tag, index) => (
-            <span
-              key={index}
-              className="flex items-center gap-1 bg-slate-200 px-2 py-1 rounded text-sm"
-            >
+            <span key={index} className="flex items-center gap-1 bg-slate-200 px-2 py-1 rounded text-sm">
               #{tag}
               <button onClick={() => handleRemoveTag(tag)}>
                 <X className="w-4 h-4 text-slate-600 hover:text-black" />
@@ -49,9 +41,9 @@ const TagInput = () => {
         <input
           type="text"
           value={inputValue}
-          className="text-sm bg-transparent border border-slate-300 px-3 py-2 rounded outline-none"
+          className="text-sm border border-slate-300 px-3 py-2 rounded outline-none"
           placeholder="Add Tags"
-          onChange={handleInputChange}
+          onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
         />
 
@@ -59,7 +51,7 @@ const TagInput = () => {
           className="w-8 h-8 flex items-center justify-center rounded border border-blue-700 hover:bg-blue-700"
           onClick={addNewTag}
         >
-          <Plus className="text-2xl text-blue-700 hover:text-white" />
+          <Plus className="text-blue-700 hover:text-white" />
         </button>
       </div>
     </div>
