@@ -97,21 +97,30 @@ const Home=()=>{
         }}
     }
 
-   const updateIsPinned=async(noteData)=>{
-        const noteId= noteData._id
-        try{
-            const response=await axiosInstance.put("/update-note-pinned/"+noteId,{
-            isPinned: !noteData.isPinned
-        })
-        
-        if (response.data && response.data.note){
-            showMessage("Note Pinned Successfully")
-            getAllNotes();
-            onClose()
-        }
-    }catch(error){
-        console.log(error)
-    }}
+const updateIsPinned = async (noteData) => {
+  const noteId = noteData._id;
+  const newPinnedStatus = !noteData.isPinned;
+
+  try {
+    const response = await axiosInstance.put(
+      "/update-note-pinned/" + noteId,
+      {
+        isPinned: newPinnedStatus,
+      }
+    );
+
+    if (response.data && response.data.note) {
+      showMessage(
+        newPinnedStatus ? "Note pinned successfully ": "Note unpinned successfully"
+      );
+
+      getAllNotes();
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 
     // Search Notes
     const onSearchNote = async (query) => {
@@ -170,7 +179,7 @@ const Home=()=>{
             </div>) : (<EmptyCard imgSrc={isSearch ? NoDataImg : AddNotesImg} 
             message={isSearch ? "Oops! No notes found matching your Search": `Your notes start here. Click the 'Add' button to write down your thoughts, ideas, and reminders, and begin your journey.`}/> )}
         </div>
-        <button className="h-16 w-16 flex items-center justify-center rounded-2xl bg-blue-500 text-white p-2 rounded my-1 hover:bg-blue-600 absolute right-10 bottom-10" 
+        <button className="h-16 w-16 flex items-center justify-center rounded-2xl bg-indigo-600 text-white p-2 rounded my-1 hover:bg-blue-600 absolute right-10 bottom-10" 
         onClick={()=>{
             setOpenAddEditModal({isShown:true, type: "add", data:null})
         }}>
