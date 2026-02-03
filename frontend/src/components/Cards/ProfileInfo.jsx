@@ -1,23 +1,27 @@
 import React from "react";
-import { getInitials } from "../../utils/helper";
- 
+import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../utils/constant";
 
-const ProfileInfo=({userInfo,onLogout})=>{
-    return (
-        <div className="flex items-center gap-3">
-            <div className="w-12 h-12 flex items-center justify-center rounded-full text-slate-950 font-medium bg-slate-100">
-                {getInitials(userInfo.fullName)}
-            </div>
+const ProfileInfo = ({ userInfo }) => {
+  const navigate = useNavigate();
 
-                <div >
-                    <p className="text-sm font-medium">{userInfo.fullName}</p>
-                    <button className="text-sm text-slate-700 underline" onClick={onLogout}>
-                        Logout
-                    </button>
+  return (
+    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/profile")}>
+      <div className="w-12 h-12 flex items-center justify-center rounded-full overflow-hidden bg-slate-100">
+        {userInfo.image ? (
+          <img src={`${BASE_URL}${userInfo.image}`} alt="profile" className="w-full h-full object-cover"/>
+          ) : (<span className="text-slate-950 font-medium">
+            {userInfo.fullName.split(" ").map((n) => n[0]).join("").toUpperCase()}
+              </span>
+            )}
+      </div>
 
-            </div>
-        </div>
-    )
-}
+      <div className="leading-tight">
+        <p className="text-sm font-medium">{userInfo.fullName}</p>
+        <p className="text-xs text-slate-500">View profile</p>
+      </div>
+    </div>
+  );
+};
 
 export default ProfileInfo;

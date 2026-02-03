@@ -1,121 +1,152 @@
 import React, { useState } from "react";
-import TagInput from "../../components/Input/TagInput";
 import { X } from "lucide-react";
+import TagInput from "../../components/Input/TagInput";
 import axiosInstance from "../../utils/axiosInstance";
 
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import Link from "@tiptap/extension-link";
+import TextAlign from "@tiptap/extension-text-align";
 
-const AddEditNotes = ({noteData,type,getAllNotes,onClose, showMessage}) => {
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  List,
+  ListOrdered,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Link as LinkIcon,
+} from "lucide-react";
+
+const AddEditNotes = ({ noteData, type, getAllNotes, onClose, showMessage }) => {
   const [title, setTitle] = useState(noteData?.title || "");
-  const [content, setContent] = useState(noteData?.content || "");
   const [tags, setTags] = useState(noteData?.tags || []);
-  const [error,setError]=useState(null);
+  const [error, setError] = useState("");
 
-  // Add Note
-  const addNewNote=async()=>{
-    try{
-      const response=await axiosInstance.post("/add-notes",{
-        title,
-        content,
-        tags,
-      })
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      Link.configure({ openOnClick: false }),
+      TextAlign.configure({ types: ["paragraph"] }),
+    ],
+    content: noteData?.content || "",
+  });
 
-      if (response.data && response.data.note){
-        showMessage("Note Added Successfully")
+  if (!editor) return null;
+
+  const wordCount = editor
+    .getText()
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+
+  const saveNote = async () => {
+    if (!title) return setError("Title is required");
+    if (!editor.getText().trim())
+      return setError("Write something first");
+
+    const payload = {
+      title,
+      content: editor.getHTML(),
+      tags,
+    };
+
+    try {
+      const url = type === "edit" ? `/edit-notes/${noteData._id}` : "/add-notes";
+      const method = type === "edit" ? "put" : "post";
+
+      const res = await axiosInstance[method](url, payload);
+
+      if (res.data?.note) {
+        showMessage(type === "edit" ? "Note Updated Successfully": "Note Added Successfully"
+        );
         getAllNotes();
-        onClose()
+        onClose();
       }
+    } catch (error) {
+      setError("Something went wrong");
     }
-    catch(error){
-      if(error.response && error.response.data && error.response.data.message){
-        setError(error.response.data.message)
-      }
-    }
-  }
-
-  // Edit Note
-  const editNote=async ()=>{
-    const noteId= noteData._id
-    try{
-      const response=await axiosInstance.put("/edit-notes/"+noteId,{
-        title,
-        content,
-        tags,
-      })
-
-      if (response.data && response.data.note){
-        showMessage("Note Updated Successfully")
-        getAllNotes();
-        onClose()
-      }
-    }
-    catch(error){
-      if(error.response && error.response.data && error.response.data.message){
-        setError(error.response.data.message)
-      }
-    }
-  }
-
-  const handleAddNote=()=>{
-    if(!title){
-      setError("Please enter the title")
-      return;
-    }
-    if(!content){
-      setError("Please enter the content")
-      return;
-    }
-
-    setError("")
-
-    if (type ==="edit"){
-      editNote();
-    }else{
-      addNewNote();
-    }
-
-  }
+  };
 
   return (
-    <div className="relative">
-          <button className="w-10 h-10 rounded-full flex items-center justify-center absolute -top-3 -right-3 hover:bg-slate-500" onClick={onClose}>
-            <X className="text-xl text-slate-400"/>
-          </button>
-      <div className="flex flex-col gap-2">
-        <label className="text-xs text-slate-400">Title</label>
-        <input
-          type="text"
-          className="text-2xl text-slate-950 outline-none"
-          placeholder="Go To GYM at 5"
-          value={title}
-          onChange={({ target }) => setTitle(target.value)}
+    <div className="relative px-1">
+      <button onClick={onClose} className="absolute -top-3 -right-3 w-9 h-9 rounded-full flex 
+      items-center justify-center bg-white shadow hover:bg-slate-100">
+        <X size={18} />
+      </button>
+
+      <input
+        className="w-full text-3xl font-semibold outline-none placeholder:text-slate-300 mb-4"
+        placeholder="Untitled" value={title} onChange={(e) => setTitle(e.target.value)}
+      />
+
+      <div className="flex items-center gap-1 mb-2 text-slate-600">
+        <ToolbarBtn icon={<Bold size={15} />} onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} />
+        <ToolbarBtn icon={<Italic size={15} />} onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} />
+        <ToolbarBtn icon={<UnderlineIcon size={15} />} onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} />
+
+        <Divider />
+
+        <ToolbarBtn icon={<List size={15} />} onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} />
+        <ToolbarBtn icon={<ListOrdered size={15} />} onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} />
+
+        <Divider />
+
+        <ToolbarBtn icon={<AlignLeft size={15} />} onClick={() => editor.chain().focus().setTextAlign("left").run()} />
+        <ToolbarBtn icon={<AlignCenter size={15} />} onClick={() => editor.chain().focus().setTextAlign("center").run()} />
+        <ToolbarBtn icon={<AlignRight size={15} />} onClick={() => editor.chain().focus().setTextAlign("right").run()} />
+
+        <Divider />
+
+        <ToolbarBtn
+          icon={<LinkIcon size={15} />}
+          onClick={() => {
+            const url = prompt("Enter link");
+            if (url) editor.chain().focus().setLink({ href: url }).run();
+          }}
+          active={editor.isActive("link")}
         />
       </div>
 
-      <div className="flex flex-col gap-2 mt-4">
-        <label className="text-xs text-slate-400">CONTENT</label>
-        <textarea
-          className="text-sm text-slate-950 bg-slate-50 outline-none p-2 rounded"
-          placeholder="Content"
-          rows={8}
-          value={content}
-          onChange={({ target }) => setContent(target.value)}
-        />
+      <div className="bg-slate-50 rounded-xl p-4 min-h-[220px] hover:bg-slate-100 transition
+                      focus-within:ring-0 focus-within:outline-none">
+        <EditorContent editor={editor} className="prose prose-sm max-w-none focus:outline-none
+                                                  [&_*]:focus:outline-none prose-p:leading-relaxed"/>
       </div>
 
-      <div className="mt-3">
-        <label className="text-xs text-slate-400">TAGS</label>
+      <div className="flex justify-between items-center mt-3 text-xs text-slate-400">
+        <span>{wordCount} words</span>
+      </div>
+
+      <div className="mt-4ss">
         <TagInput tags={tags} setTags={setTags} />
       </div>
 
-      {error && <p className="text-red-500 text-xs pt-4">{error}</p>}
+      {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
 
-      <button className="w-full text-sm bg-blue-600 text-white rounded cursor-pointer font-medium mt-5 p-2 hover:bg-blue-700"
-      onClick={handleAddNote}
-      >
-        {type === "edit"?"UPDATE" :"ADD"}
+      <button
+        onClick={saveNote}
+        className="w-full mt-5 bg-indigo-600 text-white rounded-lg py-2 hover:opacity-90 transition">
+        {type === "edit" ? "Update" : "Add"}
       </button>
     </div>
   );
 };
 
 export default AddEditNotes;
+
+
+const ToolbarBtn = ({ icon, onClick, active }) => (
+  <button onClick={onClick} className={`p-1.5 rounded-md transition ${active ? "bg-slate-200 text-black"
+     : "hover:bg-slate-200"}`}>
+    {icon}
+  </button>
+);
+
+const Divider = () => (
+  <div className="w-px h-4 bg-slate-300 mx-1" />
+);
