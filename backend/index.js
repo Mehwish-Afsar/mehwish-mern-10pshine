@@ -1,4 +1,5 @@
 require("dotenv").config();
+const bcrypt = require("bcryptjs");
 const config = require("./config.json");
 const mongoose = require("mongoose");
 const express = require("express");
@@ -13,6 +14,10 @@ const { authenticateToken } = require("./utilities");
 const logger = require("./logger");
 const asyncHandler = require("./asyncHandler");
 const errorHandler = require("./errorMiddleware");
+const sendEmail = require("./SendEmail");
+const upload = require("./uploadMiddleware");
+
+
 
 const app = express();
 
@@ -30,6 +35,9 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use("/uploads", express.static("uploads"));
+
+
 // Routes
 app.get("/", (req, res) => {
   logger.info("Root endpoint hit");
@@ -42,19 +50,34 @@ app.post("/create-account", asyncHandler(async (req, res) => {
   logger.info("Create-account request received", { email });
 
   if (!fullName || !email || !password) {
-    logger.warn("Missing fields in create-account", { body: req.body });
-    return res.status(400).json({ error: true, message: "All fields are required" });
+    return res.status(400).json({
+      error: true,
+      message: "All fields are required",
+    });
   }
 
   const isUser = await User.findOne({ email });
   if (isUser) {
-    logger.warn("User already exists", { email });
-    return res.status(400).json({ error: true, message: "User already exists" });
+    return res.status(400).json({
+      error: true,
+      message: "User already exists",
+    });
   }
 
-  const user = new User({ fullName, email, password });
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Create user
+  const user = new User({
+    fullName,
+    email,
+    password: hashedPassword,
+  });
+
+  // SAVE USER 
   await user.save();
 
+  // Generate token
   const accessToken = jwt.sign(
     { user: { _id: user._id, email: user.email } },
     process.env.ACCESS_TOKEN_SECRET,
@@ -63,8 +86,13 @@ app.post("/create-account", asyncHandler(async (req, res) => {
 
   logger.info("User created successfully", { userId: user._id });
 
-  res.json({ error: false, user, accessToken, message: "Registration Successful" });
+  res.json({
+    error: false,
+    message: "Registration Successful",
+    accessToken,
+  });
 }));
+
 
 // Login
 app.post("/login", asyncHandler(async (req, res) => {
@@ -82,10 +110,16 @@ app.post("/login", asyncHandler(async (req, res) => {
     return res.status(400).json({ error: true, message: "User not found" });
   }
 
-  if (userInfo.password !== password) {
-    logger.warn("Invalid credentials attempt", { email });
-    return res.status(400).json({ error: true, message: "Invalid Credentials" });
-  }
+const isPasswordValid = await bcrypt.compare(password, userInfo.password);
+
+if (!isPasswordValid) {
+  logger.warn("Invalid credentials attempt", { email });
+  return res.status(400).json({
+    error: true,
+    message: "Invalid Credentials",
+  });
+}
+
 
   const accessToken = jwt.sign(
     { user: userInfo },
@@ -218,8 +252,119 @@ app.get("/get-user", authenticateToken, asyncHandler(async (req, res) => {
   }
 
   logger.info("User retrieved successfully", { userId: user._id });
-  res.json({ user: { fullName: isUser.fullName, email: isUser.email, _id: isUser._id, createdOn: isUser.createdOn }, message: "" });
+res.json({
+  user: {
+    fullName: isUser.fullName,
+    email: isUser.email,
+    image: isUser.image,
+    _id: isUser._id,
+    createdOn: isUser.createdOn,
+  },
+});
 }));
+
+// Forgot Password
+app.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
+
+  const resetToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_SECRET,
+    { expiresIn: "10m" }
+  );
+
+  const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+
+  await sendEmail(
+    email,
+    "Reset Your Password",
+    `
+      <h2>Password Reset</h2>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetLink}">${resetLink}</a>
+      <p>This link expires in 10 minutes.</p>
+    `
+  );
+
+  res.json({ message: "Password reset link sent to your email" });
+});
+
+// Reset Password
+app.post("/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await User.findByIdAndUpdate(decoded.id, {
+      password: hashedPassword,
+    });
+
+    res.json({ message: "Password updated successfully" });
+
+  } catch (error) {
+      console.log("RESET PASSWORD ERROR:", error.message);
+
+    return res.status(400).json({ message: "Invalid or expired reset link" });
+  }
+});
+
+// Update Profile
+app.put("/update-profile",authenticateToken,upload.single("image"), asyncHandler(async (req, res) => {
+    const { user } = req.user;
+    const { fullName } = req.body;
+
+    const existingUser = await User.findById(user._id);
+    if (!existingUser) {
+      return res.status(404).json({ error: true, message: "User not found" });
+    }
+
+    if (fullName) existingUser.fullName = fullName;
+    if (req.file) {
+      existingUser.image = `/uploads/${req.file.filename}`;
+    }
+    await existingUser.save();
+    res.json({error: false,message: "Profile updated successfully",user: existingUser, });
+  })
+);
+
+// Change Password
+app.put("/change-password",authenticateToken,asyncHandler(async (req, res) => {
+    const { user } = req.user;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({error: true, message: "All fields are required"});
+    }
+
+    const existingUser = await User.findById(user._id);
+
+    if (!existingUser) {
+      return res.status(404).json({error: true,message: "User not found"});
+    }
+
+    const isMatch = await bcrypt.compare(
+      currentPassword,
+      existingUser.password
+    );
+
+    if (!isMatch) {
+      return res.status(400).json({error: true, message: "Current password is incorrect"});
+    }
+
+    existingUser.password = await bcrypt.hash(newPassword, 10);
+    await existingUser.save();
+
+    res.json({error: false,message: "Password changed successfully"});
+  })
+);
+
 
 // Global Error Handler
 app.use(errorHandler);
