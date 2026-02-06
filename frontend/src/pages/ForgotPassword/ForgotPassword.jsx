@@ -32,7 +32,7 @@ const ForgotPassword = () => {
           <input
             type="email"
             placeholder="Enter your email"
-            className="w-full border border-gray-300 px-3 py-2 rounded"
+            className="w-full border border-gray-300 px-3 py-2 rounded focus-within:ring-0 focus-within:outline-none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
