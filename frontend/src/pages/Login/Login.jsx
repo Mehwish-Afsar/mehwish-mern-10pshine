@@ -69,6 +69,13 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
 
+            <p className="text-sm text-right">
+            <Link to="/forgot-password" className="text-indigo-600 underline">
+            Forgot Password?
+          </Link>
+          </p>
+
+
             {error && <p className="text-red-500 text-xs">{error}</p>}
 
             <button className="w-full bg-indigo-600 py-2.5 text-white rounded-lg">

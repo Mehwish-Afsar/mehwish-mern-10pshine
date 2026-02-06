@@ -11,9 +11,9 @@ const NoteCard = ({title,date,content,tags,isPlanned,onEdit,onDelete,onPinNote})
                     <h6 className="text-sm font-medium">{title}</h6>
                     <span className="text-xs text-slate-500">{moment(date).format("DD MMM YYYY")}</span>
                 </div>
-                <Pin className={`text-xl text-blue-400 cursor-pointer ${isPlanned ? 'text-blue-400' : 'text-slate-500'}`} onClick={onPinNote}/>
+                <Pin className={`text-xl text-indigo-400 cursor-pointer ${isPlanned ? 'text-blue-400' : 'text-slate-500'}`} onClick={onPinNote}/>
             </div>
-            <p className="text-xs text-slate-600 mt-2">{content?.slice(0, 60)}</p>
+            <div className="text-xs text-slate-600" dangerouslySetInnerHTML={{ __html: content?.slice(0, 150) }}/>
             <div className="flex items-center justify-between mt-2">
                 <div className="text-xs text-slate-500">{tags.map((item)=> `#${item}`)}</div>
                     <div className="flex item-center gap-2">
