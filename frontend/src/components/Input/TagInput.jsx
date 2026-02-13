@@ -27,10 +27,10 @@ const TagInput = ({ tags, setTags }) => {
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {tags.map((tag, index) => (
-            <span key={index} className="flex items-center gap-1 bg-slate-200 px-2 py-1 rounded text-sm">
-              #{tag}
+            <span key={index} className="flex items-center gap-1 bg-indigo-600 text-white px-2 py-1 rounded text-sm">
+              #{tag}  
               <button onClick={() => handleRemoveTag(tag)}>
-                <X className="w-4 h-4 text-slate-600 hover:text-black" />
+                <X className="w-4 h-4 text-white hover:text-black" />
               </button>
             </span>
           ))}
@@ -48,10 +48,10 @@ const TagInput = ({ tags, setTags }) => {
         />
 
         <button
-          className="w-8 h-8 flex items-center justify-center rounded border border-blue-700 hover:bg-blue-700"
+          className="w-8 h-8 flex items-center justify-center rounded border border-indigo-700 hover:bg-indigo-600"
           onClick={addNewTag}
         >
-          <Plus className="text-blue-700 hover:text-white" />
+          <Plus className="text-indigo-600 hover:text-white" />
         </button>
       </div>
     </div>
