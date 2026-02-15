@@ -5,12 +5,12 @@ It allows users to securely create, manage, and organize personal notes with aut
 
 ## Live Features
 
--User Authentication (Signup / Login)
--Create, Edit, Delete Notes
--Search Notes
--Profile Management
--Change Password
--Profile Picture Upload
+- User Authentication (Signup / Login)
+- Create, Edit, Delete Notes
+- Search Notes
+- Profile Management
+- Change Password
+- Profile Picture Upload
 
 
 ## Tech Stack
