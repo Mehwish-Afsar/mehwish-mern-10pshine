@@ -73,8 +73,10 @@ This project uses SonarCloud for static code analysis.
 ### Author
 Mehwish Afsar
 
+
 ### Acknowledgment
 This project was developed to practice full-stack development, authentication, UI design consistency, and code quality analysis using SonarCloud.
+
 
 ### License
 This project is for educational purposes.
