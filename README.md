@@ -5,15 +5,15 @@ It allows users to securely create, manage, and organize personal notes with aut
 
 ## Live Features
 
-User Authentication (Signup / Login)
-Create, Edit, Delete Notes
-Search Notes
-Profile Management
-Change Password
-Profile Picture Upload
+-User Authentication (Signup / Login)
+-Create, Edit, Delete Notes
+-Search Notes
+-Profile Management
+-Change Password
+-Profile Picture Upload
 
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - React.js (Vite)
@@ -33,25 +33,30 @@ Profile Picture Upload
 ### Dev Tools
 - Git & GitHub
 - SonarCloud (Code Quality Analysis)
-- GitHub Actions (CI/CD)
 
-## ⚙️ Installation Guide
+## Installation Guide
 
 ### Clone the Repository
 
 git clone https://github.com/your-username/mehwish-mern-10pshine.git
+
 cd mehwish-mern-10pshine
 
 ### Backend Setup
+
 cd backend
+
 npm install
 
 Start backend:
+
 npm start
 
 ### Frontend Setup
 cd frontend
+
 npm install
+
 npm run dev
 
 Frontend runs on:
