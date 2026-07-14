@@ -38,8 +38,7 @@ It allows users to securely create, manage, and organize personal notes with aut
 
 ### Clone the Repository
 
-git clone https://github.com/your-username/mehwish-mern-10pshine.git
-
+git clone https://github.com/Mehwish-Afsar/mehwish-mern-10pshine.git
 cd mehwish-mern-10pshine
 
 ### Backend Setup
