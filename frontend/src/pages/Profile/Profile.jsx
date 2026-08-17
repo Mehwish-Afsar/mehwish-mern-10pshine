@@ -86,7 +86,6 @@ const Profile = () => {
           <p className="text-sm text-gray-500 mt-1">Manage your account info and security</p>
         </div>
 
-        {/* Profile Picture & Info */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative group">
             <img
@@ -114,7 +113,6 @@ const Profile = () => {
           <p className="text-sm text-gray-500">{user.email}</p>
         </div>
 
-        {/* Full Name */}
         <div className="space-y-4">
           <input
             value={fullName}
@@ -131,7 +129,6 @@ const Profile = () => {
           Save Profile
         </button>
 
-        {/* Password Change */}
         <div className="space-y-4 mt-4">
           <input
             type="password"
@@ -156,7 +153,6 @@ const Profile = () => {
           Change Password
         </button>
 
-        {/* Messages */}
         {message && (
           <p className="text-green-600 text-sm text-center">{message}</p>
         )}
