@@ -7,7 +7,7 @@ chai.use(chaiHttp);
 
 before(async function() {
   this.timeout(10000); 
-  const testDB = process.env.MONGO_URI_TEST || "mongodb://127.0.0.1:27017/notes_test";
+  const testDB = process.env.MONGO_URI_TEST ;
   await mongoose.connect(testDB);
   console.log("Test DB connected");
 });

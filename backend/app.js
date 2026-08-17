@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+const fs = require("fs");
 
 const logger = require("./logger");
 const asyncHandler = require("./asyncHandler");
@@ -16,15 +18,24 @@ const upload = require("./uploadMiddleware");
 
 const app = express();
 
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",").map((o) => o.trim())
+  : "*";
+app.use(cors({ origin: allowedOrigins }));
 
 app.use((req, res, next) => {
   logger.info({ method: req.method, url: req.url, body: req.body });
   next();
 });
 
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(uploadsDir));
 
 // ROUTES
 app.get("/", (req, res) => {
@@ -241,7 +252,10 @@ app.post("/forgot-password", async (req, res) => {
     { expiresIn: "10m" }
   );
 
-  const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+  const frontendUrl = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(",")[0].trim()
+    : "http://localhost:5173";
+  const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
 
   await sendEmail(
     email,
